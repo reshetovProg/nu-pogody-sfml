@@ -4,6 +4,7 @@
 
 int main()
 {
+    srand(time(NULL));
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
     Game game;

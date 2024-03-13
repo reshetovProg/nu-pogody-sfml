@@ -1,8 +1,10 @@
 #include "Game.h"
 
 Game::Game():
-	window(sf::VideoMode(1200, 693), "Nu pogody")
+	window(sf::VideoMode(1200, 693), "Nu pogody"),
+	th(incrementer)
 {
+
 	bgShape.setSize(sf::Vector2f(1200, 693));
 	bgImage.loadFromFile("img/bg.png");
 	bgShape.setTexture(&bgImage);
@@ -19,6 +21,72 @@ Game::Game():
 	buttons.push_back(Button(pos3));
 	buttons.push_back(Button(pos4));
 
+	eggImage.loadFromFile("img/egg.png");
+	int posEgs[24][3] =	{	{330,265,20},
+							{370,275,80},
+							{400,300,140},
+							{420,325,180},
+							{440,350,220},
+							{450,510,200}, //упало
+							{330,365,20},
+							{370,375,80},
+							{400,400,140},
+							{420,425,180},
+							{440,450,220},
+							{450,510,200}, //упало
+							{870,293,200},
+							{854,290,140},
+							{820,288,80},
+							{780,302,20},
+							{745,345,-40},
+							{765,510,200}, //упало
+							{870,393,200},
+							{854,390,140},
+							{820,388,80},
+							{780,402,20},
+							{745,445,-40},
+							{765,510,200}, //упало
+	};
+	for (int i = 0; i < 24; i++) {
+			sf::RectangleShape shape;
+			shape.setSize(sf::Vector2f(26, 19));
+			shape.setTexture(&eggImage);
+			shape.rotate(posEgs[i][2]);
+			shape.setPosition(sf::Vector2f(posEgs[i][0], posEgs[i][1]));
+			eggShapes.push_back(shape);		
+	}
+
+}
+
+Game::~Game()
+{
+	th.join();
+}
+
+void Game::createRandomEgg()
+{
+	eggStatus[rand() % 4][0]=true;
+}
+
+void Game::showInfoByEggs()
+{
+
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 6; j++) {
+			std::cout << eggStatus[i][j] << " ";
+		}
+		std::cout << " : ";
+	}
+	std::cout << std::endl;
+}
+
+void Game::moveEggs()
+{
+	for (int i = 0; i < 4; i++) {
+		for (int j = 6; j > 0; j--) {
+			std::swap(eggStatus[i][j] ,eggStatus[i][j - 1]);
+		}
+	}
 }
 
 void Game::run()
@@ -57,7 +125,6 @@ void Game::processEvent()
 		{
 			buttons[0].changeStatus();
 			wolfPosition = 0;
-			buttons[0].changeStatus();
 		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::C))
 		{
@@ -88,6 +155,17 @@ void Game::render()
 	for (auto el : buttons) {
 		window.draw(el.getShape());
 	}
+
+	
+	for (int i = 0, count=0; i < 4; i++) {
+		for (int j = 0; j < 6; j++) {
+			if (eggStatus[i][j]) {
+				window.draw(eggShapes[count]);
+			}
+			count++;
+		}
+	}
+
 	window.display();
 }
 
@@ -111,4 +189,40 @@ void Game::update()
 		screenShape.setTexture(&screenImage);
 		break;
 	}
+
+	if (value % speed==0) {
+		counterForSpawn++;
+		moveEggs();
+		if (counterForSpawn >= spawnSpeed) {
+			counterForSpawn = 0;
+			createRandomEgg();
+		}
+
+		//showInfoByEggs();
+			
+	}
+
+
+
+
+
+
+
+
 }
+
+void Game::incrementer()
+{
+	while (true) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		value++;
+		//std::cout << value;
+	
+	}
+	
+
+
+}
+
+
+int Game::value = 0;
