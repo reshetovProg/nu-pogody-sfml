@@ -15,6 +15,8 @@ class Game
 	std::vector<Button> buttons;
 	std::vector<sf::RectangleShape> eggShapes;
 	sf::Texture eggImage;
+	sf::Text countEggsText;
+	sf::Font font;
 	int wolfPosition = 3; //0-LU 1-LD 2-RU 3-RD
 	bool eggStatus[4][6]{};
 	
@@ -26,6 +28,8 @@ class Game
 	int spawnSpeed = 5;
 	int counterForSpawn=0;
 	int countCatchedEggs = 0;
+	int mistake = 0;
+
 
 public:
 	Game();
@@ -39,5 +43,6 @@ private:
 	void createRandomEgg();
 	void moveEggs();
 	void showInfoByEggs();
+	void resetGame();
 };
 

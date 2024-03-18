@@ -5,6 +5,12 @@ Game::Game():
 	th(incrementer)
 {
 
+	font.loadFromFile("Segment7.otf");
+	countEggsText.setFont(font);
+	countEggsText.setPosition(sf::Vector2f(650, 150));
+	countEggsText.setFillColor(sf::Color::Black);
+	countEggsText.setCharacterSize(60);
+
 	bgShape.setSize(sf::Vector2f(1200, 693));
 	bgImage.loadFromFile("img/bg.png");
 	bgShape.setTexture(&bgImage);
@@ -63,6 +69,19 @@ Game::~Game()
 	th.join();
 }
 
+void Game::resetGame() {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 6; j++) {
+			eggStatus[i][j] = false;
+		}
+	}
+
+	lvl = 1;
+	speed = 10;
+	spawnSpeed = 5;
+	counterForSpawn = 0;
+}
+
 void Game::createRandomEgg()
 {
 	eggStatus[rand() % 4][0]=true;
@@ -83,8 +102,24 @@ void Game::showInfoByEggs()
 void Game::moveEggs()
 {
 	for (int i = 0; i < 4; i++) {
-		for (int j = 6; j > 0; j--) {
+		for (int j = 5; j > 0; j--) {
+			if (j == 5) {
+				if (eggStatus[i][j] == 1) {
+					mistake++;
+					resetGame();
+				}
+				
+			}
 			std::swap(eggStatus[i][j] ,eggStatus[i][j - 1]);
+			
+			if (j == 4 && eggStatus[i][j]==1) {
+				//std::cout << i << " : " << wolfPosition << std::endl;
+				if (i == wolfPosition) {
+					eggStatus[i][j] = 0;
+					countCatchedEggs++;
+				}
+			}
+			
 		}
 	}
 }
@@ -115,7 +150,7 @@ void Game::processEvent()
 					contains(float(mousePos.x), float(mousePos.y))) {
 					el.changeStatus();
 					wolfPosition = count;
-					std::cout << wolfPosition;
+					//std::cout << wolfPosition;
 				
 				}
 				count++;
@@ -165,6 +200,7 @@ void Game::render()
 			count++;
 		}
 	}
+	window.draw(countEggsText);
 
 	window.display();
 }
@@ -190,19 +226,32 @@ void Game::update()
 		break;
 	}
 
-	if (value % speed==0) {
+	if (value >= speed) {
+
 		counterForSpawn++;
 		moveEggs();
+		//createRandomEgg();
 		if (counterForSpawn >= spawnSpeed) {
 			counterForSpawn = 0;
 			createRandomEgg();
 		}
-
+		value = 0;
 		//showInfoByEggs();
+		if ((countCatchedEggs % (5*lvl)) == 0 && countCatchedEggs>0) {
+			std::cout << countCatchedEggs << " : " << spawnSpeed << std::endl;
+			if (spawnSpeed > 1) {
+				spawnSpeed--;
+				lvl++;
+			}
+		}
+
+		if ((countCatchedEggs % (10 * lvl)) == 0 && countCatchedEggs > 0) {
+			if (speed>4) speed--;
+		}
 			
 	}
 
-
+	countEggsText.setString(std::to_string(countCatchedEggs));
 
 
 
@@ -220,8 +269,6 @@ void Game::incrementer()
 	
 	}
 	
-
-
 }
 
 
