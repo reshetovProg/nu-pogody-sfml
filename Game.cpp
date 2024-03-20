@@ -4,6 +4,17 @@ Game::Game():
 	window(sf::VideoMode(1200, 693), "Nu pogody"),
 	th(incrementer)
 {
+	liveTexture.loadFromFile("img/mistake.png");
+	for (int i = 0; i < 3; i++) {
+		sf::RectangleShape shape;
+		shape.setTexture(&liveTexture);
+		shape.setPosition(sf::Vector2f(310 + i * 40, 160));
+		shape.setSize(sf::Vector2f(605, 340));
+		lives.push_back(shape);
+	}
+
+	chickenShape.setSize(sf::Vector2f(605, 440));
+	
 
 	font.loadFromFile("Segment7.otf");
 	countEggsText.setFont(font);
@@ -80,6 +91,8 @@ void Game::resetGame() {
 	speed = 10;
 	spawnSpeed = 5;
 	counterForSpawn = 0;
+
+	
 }
 
 void Game::createRandomEgg()
@@ -99,24 +112,41 @@ void Game::showInfoByEggs()
 	std::cout << std::endl;
 }
 
+void Game::chickenAnimation()
+{
+	if (failSide < 2) {
+		chickenShape.setPosition(sf::Vector2f(270, 138));
+		std::string path = "img/chickenl" + std::to_string(statusChickenAnimation) + ".png";
+		chickenTexture.loadFromFile(path);
+		chickenShape.setTexture(&chickenTexture);
+	}
+	else {
+		chickenShape.setPosition(sf::Vector2f(380, 138));
+		std::string path = "img/chickenr" + std::to_string(statusChickenAnimation) + ".png";
+		chickenTexture.loadFromFile(path);
+		chickenShape.setTexture(&chickenTexture);
+	}
+}
+
 void Game::moveEggs()
 {
 	for (int i = 0; i < 4; i++) {
 		for (int j = 5; j > 0; j--) {
-			if (j == 5) {
-				if (eggStatus[i][j] == 1) {
-					mistake++;
-					resetGame();
-				}
-				
-			}
-			std::swap(eggStatus[i][j] ,eggStatus[i][j - 1]);
-			
-			if (j == 4 && eggStatus[i][j]==1) {
+			std::swap(eggStatus[i][j], eggStatus[i][j - 1]);
+					
+			if (j == 5 && eggStatus[i][j]==1) {
 				//std::cout << i << " : " << wolfPosition << std::endl;
 				if (i == wolfPosition) {
 					eggStatus[i][j] = 0;
 					countCatchedEggs++;
+				}
+			}
+			if(j==5) {
+				if (eggStatus[i][j] == 1) {
+					mistake++;
+					failSide = i;
+					statusChickenAnimation = 1;
+					resetGame();
 				}
 			}
 			
@@ -131,6 +161,13 @@ void Game::run()
 		update();
 		render();
 	}
+}
+
+void Game::gameOver() {
+	resetGame();
+	mistake = 0;
+	countCatchedEggs = 0;
+	value = 0;
 }
 
 void Game::processEvent()
@@ -201,8 +238,33 @@ void Game::render()
 		}
 	}
 	window.draw(countEggsText);
+	for (int i = 0; i < mistake; i++) {
+		window.draw(lives[i]);
+	}
+	if (statusChickenAnimation != 0) {
+		while (statusChickenAnimation < 5) {
+			chickenAnimation();
+			statusChickenAnimation++;			
+			window.clear();
+			window.draw(bgShape);
+			window.draw(screenShape);
+			window.draw(chickenShape);
+			window.draw(countEggsText);
+			for (int i = 0; i < mistake; i++) {
+				window.draw(lives[i]);
+			}
+			window.display();
+			Sleep(600);
+		}
+		statusChickenAnimation = 0;
+	}
+	if (mistake == 3) {
+		gameOver();
+	}
 
-	window.display();
+	else window.display();
+	
+	
 }
 
 void Game::update()
@@ -253,7 +315,7 @@ void Game::update()
 
 	countEggsText.setString(std::to_string(countCatchedEggs));
 
-
+	
 
 
 
